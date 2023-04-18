@@ -1,0 +1,15 @@
+{
+  "private": true ,
+  "devDependencies": {
+    "@types/core-js": "^2.5.5",
+    "@types/lodash": "^4.14.186",
+    "@types/react": "^18.0.28",
+    "@types/react-dom": "^18.0.11",
+    "@types/node": "^14.0" 
+  } ,
+  "workspaces": [
+    "src\\packages\\im-envited",
+    "src\\packages\\cbtt",
+    "src\\packages\\cbtt1"
+  ]
+}
