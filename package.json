@@ -8,6 +8,7 @@
     "@types/node": "^14.0" 
   } ,
   "workspaces": [
+    "src\\packages\\im-envited",
     "src\\packages\\cbtt",
     "src\\packages\\cbtt1"
   ]
