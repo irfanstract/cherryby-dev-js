@@ -2,7 +2,7 @@
   "name": "cbtt",
   "version": "0.1.0",
   "description": "CBTT",
-  "main": "index.js",
+  "main": "index1.cjs",
   "dependencies": {
       "core-js": "^3.30.0"
     , "ts-node": "^10.9.1"
