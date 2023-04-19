@@ -21,6 +21,11 @@ if ((
 
 
 
+if (require.main === module) {
+  require("cbtt/src/com") ;
+}
+
+
 
 
 
