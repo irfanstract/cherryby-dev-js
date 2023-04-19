@@ -7,6 +7,7 @@ import react from '@vitejs/plugin-react'
  * 
  */
 const localModuleNames: string[] | undefined = [
+  "cbtt" /*  */ ,
 ] ;
 
 // https://vitejs.dev/config/
