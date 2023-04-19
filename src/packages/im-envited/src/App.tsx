@@ -25,6 +25,11 @@ function App() {
           Edit <code>src/App.tsx</code> and save to test HMR
         </p>
       </div>
+      <p>
+        <a href="about:blank">
+          clear this page and go to <code>about:blank</code>
+        </a>
+      </p>
       <p className="read-the-docs">
         Click on the Vite and React logos to learn more
       </p>
