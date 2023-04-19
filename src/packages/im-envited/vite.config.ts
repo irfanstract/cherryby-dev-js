@@ -32,6 +32,9 @@ export default defineConfig({
       localModuleNames
     ),
     
+    /* https://vitejs.dev/guide/dep-pre-bundling.html#monorepos-and-linked-dependencies */
+    force: true ,
+    
   } /* OPTIMIZE-DEPS */ ,
   worker: {
     format: "iife" ,
