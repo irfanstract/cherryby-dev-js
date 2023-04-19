@@ -3,6 +3,7 @@ import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import ToDoListComponent from 'src/projects/ToDoListComponent';
 import './App.css'
+1 && import("cbtt") ;
 
 function App() {
   const [count, setCount] = useState(0)
