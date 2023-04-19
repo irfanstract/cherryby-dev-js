@@ -10,6 +10,7 @@ function App() {
     <div className="App">
       <div
       style={{
+        display: "none" ,
       }}
       >
         <a href="https://vitejs.dev" target="_blank">
