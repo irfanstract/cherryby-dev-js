@@ -27,7 +27,7 @@
     "moduleResolution": "Node",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true,
+    "noEmit": true /* not using `tsc`, instead using TS-Node, Deno, Vite, ESBuild - https://github.com/microsoft/TypeScript/pull/51669 */ ,
     "jsx": "react-jsx" ,
   },
   "include": [
