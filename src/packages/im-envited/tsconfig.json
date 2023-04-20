@@ -24,7 +24,7 @@
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true,
     "module": "ESNext",
-    "moduleResolution": "Node",
+    "moduleResolution": "bundler" /* https://github.com/microsoft/TypeScript/pull/51669 */,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true /* not using `tsc`, instead using TS-Node, Deno, Vite, ESBuild - https://github.com/microsoft/TypeScript/pull/51669 */ ,
