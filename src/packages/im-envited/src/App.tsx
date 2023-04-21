@@ -2,6 +2,7 @@ import { useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import ToDoListComponent from 'src/projects/ToDoListComponent';
+import IDBF from 'src/projects/idbf';
 import './App.css'
 1 && import("cbtt") ;
 
@@ -41,6 +42,9 @@ function App() {
       </p>
       <div>
         <ToDoListComponent />
+      </div>
+      <div>
+        <IDBF />
       </div>
     </div>
   )
