@@ -19,6 +19,12 @@ import * as util from "cbtt/src/util/all" ;
 
 
 
+export abstract class StringKeyedDictTo<Value extends null | {}> {
+  [key: string]: Value ;
+} ;
+
+
+
 
 
 
