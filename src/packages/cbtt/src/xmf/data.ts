@@ -21,6 +21,7 @@ export type Class = (
   | string
   // | String
 ) ;
+export interface CommentOrElementOps extends CommentOrElementOpsRe {}
 export interface CommentOrElementOps {
 
   type: symbol | string | Class ; 
@@ -42,6 +43,7 @@ export interface CommentNode extends CommentOrElementOps {
 
 } 
 export const CNT = Symbol("!--") ;
+export interface Element extends ElementRe {}
 export interface Element extends CommentOrElementOps {
 
   /** 
@@ -86,6 +88,19 @@ export type Node = (
 
 export interface CommentOrElementOps {
   srcCodeInfo ?: null | {} ;
+} 
+
+
+
+export interface CommentOrElementOpsRe {
+  type: CommentOrElementOps["type"] ; 
+  attributes ?: CommentOrElementOps["attributes"] ;
+  children ?: null | Iterable<unknown> ;
+} 
+export interface ElementRe extends CommentOrElementOpsRe {
+  type: Element["type"] ; 
+  attributes: Element["attributes"] ;
+  children?: Iterable<Node>
 } 
 
 
