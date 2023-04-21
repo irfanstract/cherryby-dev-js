@@ -3,14 +3,21 @@
 
 
 
-require("core-js/stable") ;
+// require("core-js/stable") ;
+import  "core-js/stable" ;
 
-export import assert = require("node:assert") ;
+// export import assert = require("node:assert") ;
+import * as assert from "node:assert" ;
+export    { assert , } ;
 
-export import _ = require("lodash") ;
-export import Immutable = require("immutable") ;
+// export import _ = require("lodash") ;
+import * as _ from "lodash" ;
+export     { _, } ;
+import * as Immutable from "immutable" ;
+export   {  Immutable, };
 
-export import VM = require("node:vm") ;
+// export import VM = require("node:vm") ;
+;
 
 export type CouldLog = {
   (...values: (any[] | [])): void ;
@@ -34,7 +41,9 @@ export const warn: CouldLog = (
 
 
 
-export import Stream = require("node:stream") ;
+// // export import Stream = require("node:stream") ;
+// import * as Stream from "node:stream" ;
+// export    { Stream, } ;
 
 
 
