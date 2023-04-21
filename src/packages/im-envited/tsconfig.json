@@ -7,6 +7,9 @@
       "DOM.Iterable", 
       "ESNext" ,
     ],
+    /* https://github.com/microsoft/TypeScript/pull/51669 */
+    /* we already have `noEmit: true` here and the runtime uses alternative compiler/transpiler */
+    "allowImportingTsExtensions": true,
     "allowJs": true,
     "checkJs": true,
     "skipLibCheck": true,
