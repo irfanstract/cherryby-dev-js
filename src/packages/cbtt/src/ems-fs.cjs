@@ -7,8 +7,8 @@
  * config :
  * ```
  *   --memory-init-file 0 
- *   -sWASM=2 
- *   -s EXPORTED_RUNTIME_METHODS="[FS, cwrap, ccall, setValue, writeAsciiToMemory, lengthBytesUTF8, stringToUTF8, UTF8ToString]"   
+ *   -sWASM=0 
+ *   -s EXPORTED_RUNTIME_METHODS="[FS, IDBFS, cwrap, ccall, setValue, writeAsciiToMemory, lengthBytesUTF8, stringToUTF8, UTF8ToString]"   
  *   -sFORCE_FILESYSTEM 
  *   "-lidbfs.js" 
  * ```
@@ -6112,6 +6112,7 @@ function dbg(text) {
       if (!dontAddNull) HEAP8[((buffer)>>0)] = 0;
     }
 
+
   var FSNode = /** @constructor */ function(parent, name, mode, rdev) {
     if (!parent) {
       parent = this;  // root node sets parent to itself
@@ -6431,6 +6432,7 @@ Module["cwrap"] = cwrap;
 Module["setValue"] = setValue;
 Module["writeAsciiToMemory"] = writeAsciiToMemory;
 Module["FS"] = FS;
+Module["IDBFS"] = IDBFS;
 var missingLibrarySymbols = [
   'stringToNewUTF8',
   'emscripten_realloc_buffer',
@@ -6670,7 +6672,6 @@ var unexportedSymbols = [
   'GLFW',
   'GLEW',
   'IDBStore',
-  'IDBFS',
 ];
 unexportedSymbols.forEach(unexportedRuntimeSymbol);
 
