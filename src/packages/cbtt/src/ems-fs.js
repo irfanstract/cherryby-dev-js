@@ -14,6 +14,12 @@
  * ```
  */
 
+var Module = (() => {
+  var _scriptDir = typeof document !== 'undefined' && document.currentScript ? document.currentScript.src : undefined;
+  if (typeof __filename !== 'undefined') _scriptDir = _scriptDir || __filename;
+  return (
+function(Module = {})  {
+
 // include: shell.js
 // The Module object: Our interface to the outside world. We import
 // and export values on it. There are various ways Module can be used:
@@ -29,6 +35,21 @@
 // before the code. Then that object will be used in the code, and you
 // can continue to use Module afterwards as well.
 var Module = typeof Module != 'undefined' ? Module : {};
+
+// Set up the promise that indicates the Module is initialized
+var readyPromiseResolve, readyPromiseReject;
+Module['ready'] = new Promise(function(resolve, reject) {
+  readyPromiseResolve = resolve;
+  readyPromiseReject = reject;
+});
+["_main","_fflush","onRuntimeInitialized"].forEach((prop) => {
+  if (!Object.getOwnPropertyDescriptor(Module['ready'], prop)) {
+    Object.defineProperty(Module['ready'], prop, {
+      get: () => abort('You are getting ' + prop + ' on the Promise object, instead of the instance. Use .then() to get called back with the instance, see the MODULARIZE docs in src/settings.js'),
+      set: () => abort('You are setting ' + prop + ' on the Promise object, instead of the instance. Use .then() to get called back with the instance, see the MODULARIZE docs in src/settings.js'),
+    });
+  }
+});
 
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
@@ -144,26 +165,7 @@ readAsync = (filename, onload, onerror) => {
 
   arguments_ = process.argv.slice(2);
 
-  if (typeof module != 'undefined') {
-    module['exports'] = Module;
-  }
-
-  process.on('uncaughtException', function(ex) {
-    // suppress ExitStatus exceptions from showing an error
-    if (ex !== 'unwind' && !(ex instanceof ExitStatus) && !(ex.context instanceof ExitStatus)) {
-      throw ex;
-    }
-  });
-
-  // Without this older versions of node (< v15) will log unhandled rejections
-  // but return 0, which is not normally the desired behaviour.  This is
-  // not be needed with node v15 and about because it is now the default
-  // behaviour:
-  // See https://nodejs.org/api/cli.html#cli_unhandled_rejections_mode
-  var nodeMajor = process.versions.node.split(".")[0];
-  if (nodeMajor < 15) {
-    process.on('unhandledRejection', function(reason) { throw reason; });
-  }
+  // MODULARIZE will export the module in the proper place outside, we don't need to export here
 
   quit_ = (status, toThrow) => {
     process.exitCode = status;
@@ -257,6 +259,11 @@ if (ENVIRONMENT_IS_WEB || ENVIRONMENT_IS_WORKER) {
     scriptDirectory = self.location.href;
   } else if (typeof document != 'undefined' && document.currentScript) { // web
     scriptDirectory = document.currentScript.src;
+  }
+  // When MODULARIZE, this JS may be executed later, after document.currentScript
+  // is gone, so we saved it, and we use it here instead of any other info.
+  if (_scriptDir) {
+    scriptDirectory = _scriptDir;
   }
   // blob urls look like blob:http://site.com/etc/etc and we cannot infer anything from them.
   // otherwise, slice off the final part of the url to find the script directory.
@@ -2992,6 +2999,7 @@ function abort(what) {
   /** @suppress {checkTypes} */
   var e = new WebAssembly.RuntimeError(what);
 
+  readyPromiseReject(e);
   // Throw the error whether or not MODULARIZE is set because abort is used
   // in code paths apart from instantiation where an exception is expected
   // to be thrown when abort is called.
@@ -3052,7 +3060,7 @@ function getBinary(file) {
     if (readBinary) {
       return readBinary(file);
     }
-    throw "both async and sync fetching of the wasm failed";
+    throw "sync fetching of the wasm failed: you can preload it to Module['wasmBinary'] manually, or emcc.py will do that for you when generating HTML (but not JS)";
   }
   catch (err) {
     abort(err);
@@ -3092,57 +3100,24 @@ function getBinaryPromise(binaryFile) {
   return Promise.resolve().then(function() { return getBinary(binaryFile); });
 }
 
-function instantiateArrayBuffer(binaryFile, imports, receiver) {
-  return getBinaryPromise(binaryFile).then(function(binary) {
-    return WebAssembly.instantiate(binary, imports);
-  }).then(function (instance) {
-    return instance;
-  }).then(receiver, function(reason) {
-    err('failed to asynchronously prepare wasm: ' + reason);
-
-    // Warn on some common problems.
-    if (isFileURI(wasmBinaryFile)) {
-      err('warning: Loading from a file URI (' + wasmBinaryFile + ') is not supported in most browsers. See https://emscripten.org/docs/getting_started/FAQ.html#how-do-i-run-a-local-webserver-for-testing-why-does-my-program-stall-in-downloading-or-preparing');
+function instantiateSync(file, info) {
+  var instance;
+  var module;
+  var binary;
+  try {
+    binary = getBinary(file);
+    module = new WebAssembly.Module(binary);
+    instance = new WebAssembly.Instance(module, info);
+  } catch (e) {
+    var str = e.toString();
+    err('failed to compile wasm module: ' + str);
+    if (str.includes('imported Memory') ||
+        str.includes('memory import')) {
+      err('Memory size incompatibility issues may be due to changing INITIAL_MEMORY at runtime to something too large. Use ALLOW_MEMORY_GROWTH to allow any size memory (and also make sure not to set INITIAL_MEMORY at runtime to something smaller than it was at compile time).');
     }
-    abort(reason);
-  });
-}
-
-function instantiateAsync(binary, binaryFile, imports, callback) {
-  if (!binary &&
-      typeof WebAssembly.instantiateStreaming == 'function' &&
-      !isDataURI(binaryFile) &&
-      // Don't use streaming for file:// delivered objects in a webview, fetch them synchronously.
-      !isFileURI(binaryFile) &&
-      // Avoid instantiateStreaming() on Node.js environment for now, as while
-      // Node.js v18.1.0 implements it, it does not have a full fetch()
-      // implementation yet.
-      //
-      // Reference:
-      //   https://github.com/emscripten-core/emscripten/pull/16917
-      !ENVIRONMENT_IS_NODE &&
-      typeof fetch == 'function') {
-    return fetch(binaryFile, { credentials: 'same-origin' }).then(function(response) {
-      // Suppress closure warning here since the upstream definition for
-      // instantiateStreaming only allows Promise<Repsponse> rather than
-      // an actual Response.
-      // TODO(https://github.com/google/closure-compiler/pull/3913): Remove if/when upstream closure is fixed.
-      /** @suppress {checkTypes} */
-      var result = WebAssembly.instantiateStreaming(response, imports);
-
-      return result.then(
-        callback,
-        function(reason) {
-          // We expect the most common failure cause to be a bad MIME type for the binary,
-          // in which case falling back to ArrayBuffer instantiation should work.
-          err('wasm streaming compile failed: ' + reason);
-          err('falling back to ArrayBuffer instantiation');
-          return instantiateArrayBuffer(binaryFile, imports, callback);
-        });
-    });
-  } else {
-    return instantiateArrayBuffer(binaryFile, imports, callback);
+    throw e;
   }
+  return [instance, module];
 }
 
 // Create the wasm instance.
@@ -3175,19 +3150,6 @@ function createWasm() {
   addRunDependency('wasm-instantiate');
 
   // Prefer streaming instantiation if available.
-  // Async compilation can be confusing when an error on the page overwrites Module
-  // (for example, if the order of elements is wrong, and the one defining Module is
-  // later), so we save Module and check it later.
-  var trueModule = Module;
-  function receiveInstantiationResult(result) {
-    // 'result' is a ResultObject object which has both the module and instance.
-    // receiveInstance() will swap in the exports (to Module.asm) so they can be called
-    assert(Module === trueModule, 'the Module object should not be replaced during async compilation - perhaps the order of HTML elements is wrong?');
-    trueModule = null;
-    // TODO: Due to Closure regression https://github.com/google/closure-compiler/issues/3193, the above line no longer optimizes out down to the following line.
-    // When the regression is fixed, can restore the above PTHREADS-enabled path.
-    receiveInstance(result['instance']);
-  }
 
   // User shell pages can write their own Module.instantiateWasm = function(imports, successCallback) callback
   // to manually instantiate the Wasm module themselves. This allows pages to run the instantiation parallel
@@ -3198,12 +3160,16 @@ function createWasm() {
       return Module['instantiateWasm'](info, receiveInstance);
     } catch(e) {
       err('Module.instantiateWasm callback failed with error: ' + e);
-        return false;
+        // If instantiation fails, reject the module ready promise.
+        readyPromiseReject(e);
     }
   }
 
-  instantiateAsync(wasmBinary, wasmBinaryFile, info, receiveInstantiationResult);
-  return {}; // no exports yet; we'll fill them in later
+  var result = instantiateSync(wasmBinaryFile, info);
+  // TODO: Due to Closure regression https://github.com/google/closure-compiler/issues/3193,
+  // the above line no longer optimizes out down to the following line.
+  // When the regression is fixed, we can remove this if/else.
+  return receiveInstance(result[0]);
 }
 
 // Globals used by JS i64 conversions (see makeSetValue)
@@ -5991,6 +5957,7 @@ function dbg(text) {
       // if exit() was called explicitly, warn the user if the runtime isn't actually being shut down
       if (keepRuntimeAlive() && !implicit) {
         var msg = 'program exited (with status: ' + status + '), but keepRuntimeAlive() is set (counter=' + runtimeKeepaliveCounter + ') due to an async operation, so halting execution but not exiting the runtime or preventing further async execution (you can use emscripten_force_exit, if you want to force a true shutdown)';
+        readyPromiseReject(msg);
         err(msg);
       }
   
@@ -6365,52 +6332,37 @@ var wasmImports = {
 };
 var asm = createWasm();
 /** @type {function(...*):?} */
-var ___wasm_call_ctors = createExportWrapper("__wasm_call_ctors");
+var ___wasm_call_ctors = createExportWrapper("__wasm_call_ctors", asm);
 /** @type {function(...*):?} */
-var _main = Module["_main"] = createExportWrapper("main");
+var _main = Module["_main"] = createExportWrapper("main", asm);
 /** @type {function(...*):?} */
-var ___errno_location = createExportWrapper("__errno_location");
+var ___errno_location = createExportWrapper("__errno_location", asm);
 /** @type {function(...*):?} */
-var _fflush = Module["_fflush"] = createExportWrapper("fflush");
+var _fflush = Module["_fflush"] = createExportWrapper("fflush", asm);
 /** @type {function(...*):?} */
-var _malloc = createExportWrapper("malloc");
+var _malloc = createExportWrapper("malloc", asm);
 /** @type {function(...*):?} */
-var _free = createExportWrapper("free");
+var _free = createExportWrapper("free", asm);
 /** @type {function(...*):?} */
-var setTempRet0 = createExportWrapper("setTempRet0");
+var setTempRet0 = createExportWrapper("setTempRet0", asm);
 /** @type {function(...*):?} */
-var getTempRet0 = createExportWrapper("getTempRet0");
+var getTempRet0 = createExportWrapper("getTempRet0", asm);
 /** @type {function(...*):?} */
-var _emscripten_stack_init = function() {
-  return (_emscripten_stack_init = Module["asm"]["emscripten_stack_init"]).apply(null, arguments);
-};
-
+var _emscripten_stack_init = asm["emscripten_stack_init"]
 /** @type {function(...*):?} */
-var _emscripten_stack_get_free = function() {
-  return (_emscripten_stack_get_free = Module["asm"]["emscripten_stack_get_free"]).apply(null, arguments);
-};
-
+var _emscripten_stack_get_free = asm["emscripten_stack_get_free"]
 /** @type {function(...*):?} */
-var _emscripten_stack_get_base = function() {
-  return (_emscripten_stack_get_base = Module["asm"]["emscripten_stack_get_base"]).apply(null, arguments);
-};
-
+var _emscripten_stack_get_base = asm["emscripten_stack_get_base"]
 /** @type {function(...*):?} */
-var _emscripten_stack_get_end = function() {
-  return (_emscripten_stack_get_end = Module["asm"]["emscripten_stack_get_end"]).apply(null, arguments);
-};
-
+var _emscripten_stack_get_end = asm["emscripten_stack_get_end"]
 /** @type {function(...*):?} */
-var stackSave = createExportWrapper("stackSave");
+var stackSave = createExportWrapper("stackSave", asm);
 /** @type {function(...*):?} */
-var stackRestore = createExportWrapper("stackRestore");
+var stackRestore = createExportWrapper("stackRestore", asm);
 /** @type {function(...*):?} */
-var stackAlloc = createExportWrapper("stackAlloc");
+var stackAlloc = createExportWrapper("stackAlloc", asm);
 /** @type {function(...*):?} */
-var _emscripten_stack_get_current = function() {
-  return (_emscripten_stack_get_current = Module["asm"]["emscripten_stack_get_current"]).apply(null, arguments);
-};
-
+var _emscripten_stack_get_current = asm["emscripten_stack_get_current"]
 
 
 // include: postamble.js
@@ -6744,6 +6696,7 @@ function run() {
 
     preMain();
 
+    readyPromiseResolve(Module);
     if (Module['onRuntimeInitialized']) Module['onRuntimeInitialized']();
 
     if (shouldRunNow) callMain();
@@ -6821,3 +6774,16 @@ run();
 
 
 // end include: postamble.js
+
+
+  return Module
+}
+
+);
+})();
+if (typeof exports === 'object' && typeof module === 'object')
+  module.exports = Module;
+else if (typeof define === 'function' && define['amd'])
+  define([], function() { return Module; });
+else if (typeof exports === 'object')
+  exports["Module"] = Module;
