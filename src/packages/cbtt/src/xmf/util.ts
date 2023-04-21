@@ -30,6 +30,14 @@ export function stringConcatFromIterable(src: Iterable<string>) {
   return [...src].join("") ;
 }
 
+interface  Tokenised {}
+interface  Tokenised extends Iterable<string> {}
+namespace  Tokenised {
+
+  ;  // TS(1205)
+}
+export { Tokenised , } ;
+
 
 
 
