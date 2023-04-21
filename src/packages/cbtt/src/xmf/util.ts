@@ -25,6 +25,13 @@ export abstract class StringKeyedDictTo<Value extends null | {}> {
 
 
 
+export function stringConcatFromIterable(src: Iterable<string>): string ;
+export function stringConcatFromIterable(src: Iterable<string>) {
+  return [...src].join("") ;
+}
+
+
+
 
 
 
