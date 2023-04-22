@@ -73,7 +73,19 @@ console["log"](pm, { IDBFS, } ) ;
       } else {
         console["log"](`refusing to overwrite the file the second time.`) ;
       }
-      files.writeFile(`file-${Math.abs(util._.random(0, Number.MAX_SAFE_INTEGER, false) ) }.txt`, `file.txt`, );
+      files.writeFile((
+        (() => {
+        const path = (
+        rootDir1
+        .replace(/\/?$/g, () => (
+          "/" +
+          `file-${Math.abs(util._.random(0, Number.MAX_SAFE_INTEGER, false) ) }.txt`
+        ) )
+        ) ;
+        console["log"]({ path, }) ;
+        return path ;
+        })()
+      ), `file.txt`, );
       await synchrFs(true) ;
       await synchrFs(false) ;
       console["log"](`file contents: `, files.readFile(dateTimeFilePath, { encoding: "utf8" }, ) ) ;
