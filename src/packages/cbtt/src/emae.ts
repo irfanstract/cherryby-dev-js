@@ -74,11 +74,17 @@ console["log"](pm, { IDBFS, } ) ;
         console["log"](`refusing to overwrite the file the second time.`) ;
       }
       files.writeFile((
+        (() => {
+        const path = (
         rootDir1
         .replace(/\/?$/g, () => (
           "/" +
           `file-${Math.abs(util._.random(0, Number.MAX_SAFE_INTEGER, false) ) }.txt`
         ) )
+        ) ;
+        console["log"]({ path, }) ;
+        return path ;
+        })()
       ), `file.txt`, );
       await synchrFs(true) ;
       await synchrFs(false) ;
