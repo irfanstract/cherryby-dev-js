@@ -55,6 +55,63 @@ console["log"](pm, { IDBFS, } ) ;
  */
 export { IDBFS , } ;
 
+if (1) {
+  const DEBUG /* future version of `strictFunctionTypes` may make breaking change to `const pushLog = console["log"] ;` */ : {
+    (...args: any[]): void ;
+  } = (
+    (...args) => (
+      console["log"](`[IDBFS.ts]`, ...args)
+    )
+  ) ; 
+  /** 
+   * see also 
+   * https://emscripten.org/docs/api_reference/Filesystem-API.html#FS.syncfs
+   * 
+   */
+  const fixOutOfSyncness = (
+    (...[mode2,]: [mode: "r" | "w"]) => (
+      new Promise<void>((resume, reject) => (
+        files.syncfs((
+          mode2 === "r"
+        ), (z) => (
+          z ? reject(z) : resume() 
+        ) )
+      ))
+    )
+  ) ;
+  const {
+    dirname = "/usr-files-idbfs-dot-ts-3333333333333M333/" ,
+  } = {} as Partial<{
+    dirname: string ;
+  }> ;
+  DEBUG(`trying to mount the IDBFS`, { dirname, }) ;
+  (() => {
+    const actualPath = (
+      dirname
+      .replace(/\/$/g, "") /* NO trailing slash */
+    ) ;
+    DEBUG({ actualPath, }) ;
+    (
+      files.analyzePath(actualPath, false).exists ||
+      files["mkdir"](actualPath)
+    ) ;
+    (
+      files.mount(IDBFS, {}, (
+        actualPath
+      ) )
+    ) ;
+  })() ;
+  DEBUG(`mounted the IDBFS`, { dirname, }) ;
+  DEBUG(`trying to '${Object.keys({ fixOutOfSyncness, }) }'`) ;
+  if (1) {
+    await (
+      fixOutOfSyncness("r")
+    ) ;
+  }
+  DEBUG(`done '${Object.keys({ fixOutOfSyncness, }) }'`) ;
+  files.chdir(dirname) ;
+}
+
 export default files ;
 
 
