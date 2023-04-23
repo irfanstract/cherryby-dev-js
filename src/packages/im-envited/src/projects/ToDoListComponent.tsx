@@ -57,6 +57,12 @@ export default (
               <Ionic.ReorderingHandle slot="start" />
               <div>
                 <p>Item <code>{k }</code></p>
+                <canvas 
+                style={{
+                  height: `calc(4 * 2em)` ,
+                  background: `rgb(128 255 128)`,
+                }}
+                />
               </div>
               </Ionic.Item>
               </K>
