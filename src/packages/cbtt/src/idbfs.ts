@@ -21,6 +21,11 @@ const pm = await pm0() ;
 const { 
   
   FS: files = (
+    console["error"]("undefined 'files'") ,
+    /*
+     * in Node the following would cause `exit(13)`, but 
+     * this fallthrough implies failure anyway -
+     */
     await neverResolving
   ), 
 
