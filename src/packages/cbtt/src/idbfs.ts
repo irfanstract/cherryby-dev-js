@@ -30,6 +30,12 @@ const {
   ), 
 
   IDBFS = (
+    console["error"]("undefined 'IDBFS'") ,
+    /*
+     * in Node the following would cause `exit(13)`, but 
+     * this fallthrough implies failure anyway - 
+     * make sure the calling code be a browser env!
+     */
     await neverResolving
   ), 
 
