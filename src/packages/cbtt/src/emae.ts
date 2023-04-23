@@ -18,6 +18,7 @@ console["log"](pm, { IDBFS, } ) ;
         ))
       )
     ) ;
+    console["log"](`CWD: `, files.cwd() ) ;
     const {
       rootDir1: rootDir1 = "/fs11" ,
     } = {} as {
