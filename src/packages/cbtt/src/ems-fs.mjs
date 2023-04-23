@@ -6821,4 +6821,29 @@ run();
 
 );
 })();
-export default Module;
+/** 
+ * to avoid duplicate (likely to fail!) instantiation,
+ * needs this indirection.
+ */
+const llm = (
+  (async () => { 
+    // @ts-check
+    const files = (
+      await Module()
+    ) ;
+    // const synchrFs = (
+    //   /** @type (save: boolean) => Promise<void> */
+    //   (...[shallSave,]) => (
+    //     new Promise((resume, reject) => (
+    //       files.syncfs(!shallSave, (z) => (z ? reject(z) : resume() ) )
+    //     ))
+    //   )
+    // ) ;
+    return files ;
+  } )()
+  .then((value) => (
+    console["log"](`EMS-FS successfully loaded`) ,   
+    value
+  ))
+) ;
+export default function FS() /** a function returning a Promise */ { return llm ; } ;
