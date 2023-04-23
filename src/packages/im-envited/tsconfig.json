@@ -7,6 +7,9 @@
       "DOM.Iterable", 
       "ESNext" ,
     ],
+    /* https://github.com/microsoft/TypeScript/pull/51669 */
+    /* we already have `noEmit: true` here and the runtime uses alternative compiler/transpiler */
+    "allowImportingTsExtensions": true,
     "allowJs": true,
     "checkJs": true,
     "skipLibCheck": true,
@@ -24,10 +27,10 @@
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true,
     "module": "ESNext",
-    "moduleResolution": "Node",
+    "moduleResolution": "bundler" /* https://github.com/microsoft/TypeScript/pull/51669 */,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true,
+    "noEmit": true /* not using `tsc`, instead using TS-Node, Deno, Vite, ESBuild - https://github.com/microsoft/TypeScript/pull/51669 */ ,
     "jsx": "react-jsx" ,
   },
   "include": [
