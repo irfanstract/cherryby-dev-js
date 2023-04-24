@@ -10,5 +10,6 @@
   "workspaces": [
       "src\\packages\\cbtt"
     , "src\\packages\\cbtt1"
+    , "src\\packages\\im-envited"
   ]
 }
