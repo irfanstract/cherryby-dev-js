@@ -2,6 +2,11 @@
 
   "extends": [
     
+    // // adopt the `react-app` rules as starter, although
+    // // will need to subvert some of them due to the inconveniences it/they caused
+    // "react-app",
+    // "react-app/jest" 
+
   ] 
   
   , "rules": {
