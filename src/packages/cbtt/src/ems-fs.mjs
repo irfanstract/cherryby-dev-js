@@ -6260,6 +6260,35 @@ ERRNO_CODES = {
       'EOWNERDEAD': 62,
       'ESTRPIPE': 135,
     };;
+    fsOverride11: {
+      break fsOverride11 ;
+      ;
+      /** 
+       * needs to do this,
+       * the same thing which `emcc`-generated code in case of `NODERAWFS` would do
+       * 
+       */
+      {
+        var _wrapNodeError = function(func) {
+          return function() {
+            try {
+              return func.apply(this, arguments)
+            } catch (e) {
+              if (e.code) {
+                throw new FS.ErrnoError(ERRNO_CODES[e.code]);
+              }
+              throw e;
+            }
+          }
+        };
+        var VFS = Object.assign({}, FS);
+        for (const _key in IDBFS) {
+          (
+            FS[_key] = _wrapNodeError(IDBFS[_key])
+          ) ;
+        }
+      }
+    }
 // include: base64Utils.js
 // Copied from https://github.com/strophe/strophejs/blob/e06d027/src/polyfills.js#L149
 
