@@ -41,7 +41,7 @@ function App() {
         Click on the Vite and React logos to learn more
       </p>
       <div>
-        <ToDoListComponent />
+        <ToDoListComponent value={3} onItemReorder={Object} />
       </div>
       <div>
         <IDBF />
